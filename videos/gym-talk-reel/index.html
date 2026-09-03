@@ -139,8 +139,35 @@
       );
 
       // --- Caption groups (word/phrase-synced) ---
-      // Populated once the transcript is available; see CAPTION_GROUPS below.
-      var CAPTION_GROUPS = [];
+      // Hebrew transcript from Deepgram (nova-3, word-level timestamps), grouped
+      // into short phrases on natural speech pauses / sentence breaks.
+      var CAPTION_GROUPS = [
+        { start: 0, end: 1.36, words: [{ text: "בואו" }, { text: "נדבר," }, { text: "אז" }, { text: "רגע," }] },
+        { start: 1.36, end: 3.12, words: [{ text: "עוד" }, { text: "יום" }, { text: "אחד" }, { text: "עוד" }, { text: "פעם" }] },
+        { start: 3.12, end: 4.32, words: [{ text: "אני" }, { text: "הולך" }, { text: "להתאמן," }] },
+        { start: 4.4, end: 5.44, words: [{ text: "ואני" }, { text: "לא" }, { text: "פרסומת." }] },
+        { start: 5.44, end: 6.48, words: [{ text: "אני" }, { text: "לא" }, { text: "בא" }, { text: "להגיד" }, { text: "לכם" }, { text: "את" }, { text: "זה" }] },
+        { start: 6.48, end: 7.68, words: [{ text: "בשביל" }, { text: "לעשות" }, { text: "פרסומת." }] },
+        { start: 7.68, end: 9.28, words: [{ text: "אבל" }, { text: "כמה" }, { text: "פעמים" }, { text: "תגידו" }, { text: "לעצמך:" }] },
+        { start: 9.28, end: 10.96, words: [{ text: "“עם" }, { text: "עוד" }, { text: "יום" }, { text: "אחד" }, { text: "ועוד" }, { text: "פעם" }] },
+        { start: 10.96, end: 11.68, words: [{ text: "תסבלו" }, { text: "את" }, { text: "זה”," }] },
+        { start: 11.68, end: 13.92, words: [{ text: "ועוד" }, { text: "פעם" }, { text: "יהיה" }, { text: "חוסר" }, { text: "ביטחון." }] },
+        { start: 14.335, end: 15.775, words: [{ text: "וכל" }, { text: "הדברים" }, { text: "האלה" }] },
+        { start: 15.775, end: 17.535, words: [{ text: "זה" }, { text: "נטו" }, { text: "בשביל" }, { text: "להסביר" }, { text: "לכם" }] },
+        { start: 17.535, end: 19.695, words: [{ text: "שאפשרי" }, { text: "כבר" }, { text: "לא" }, { text: "להיות" }, { text: "ככה." }] },
+        { start: 19.695, end: 21.055, words: [{ text: "באמת" }, { text: "כל" }, { text: "כך", emph: true }, { text: "פשוט", emph: true }] },
+        { start: 21.055, end: 23.695, words: [{ text: "לבוא" }, { text: "ולעשות" }, { text: "שלוש" }, { text: "וחצי" }, { text: "שנה" }, { text: "תהליך" }] },
+        { start: 23.695, end: 26.975, words: [{ text: "עם" }, { text: "עצמכם," }, { text: "להבין" }, { text: "שאתם" }, { text: "הולכים" }] },
+        { start: 27.22, end: 29.46, words: [{ text: "למקום" }, { text: "אחר," }, { text: "לתהליך" }, { text: "שהולך" }] },
+        { start: 29.46, end: 30.34, words: [{ text: "לשנות" }, { text: "אתכם" }, { text: "את" }, { text: "החיים.", emph: true }] },
+        { start: 30.34, end: 31.86, words: [{ text: "חבר’ה," }, { text: "מתי" }, { text: "שתבינו" }, { text: "את" }, { text: "זה" }] },
+        { start: 31.86, end: 33.94, words: [{ text: "שזה" }, { text: "כל" }, { text: "כך", emph: true }, { text: "פשוט", emph: true }, { text: "ולא" }, { text: "מורכב," }] },
+        { start: 33.94, end: 35.3, words: [{ text: "כמו" }, { text: "שאמרנו" }, { text: "תמיד." }] },
+        { start: 35.7, end: 36.98, words: [{ text: "הדברים" }, { text: "השתנו.", emph: true }] },
+        { start: 37.06, end: 38.66, words: [{ text: "חבר’ה," }, { text: "שלחו" }, { text: "לי" }, { text: "פה" }, { text: "הודעה", emph: true }] },
+        { start: 38.66, end: 39.78, words: [{ text: "ובואו" }, { text: "נדבר" }, { text: "—" }, { text: "אני" }, { text: "באמת" }] },
+        { start: 39.78, end: 40.74, words: [{ text: "יכול" }, { text: "לעזור" }, { text: "לכם." }] },
+      ];
 
       var layer = document.getElementById("caption-layer");
       CAPTION_GROUPS.forEach(function (group, gi) {
