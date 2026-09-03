@@ -138,6 +138,15 @@
         data-track-index="10"
       ></audio>
 
+      <audio
+        id="bgm"
+        src="assets/bgm.m4a"
+        data-start="0"
+        data-duration="40.85"
+        data-track-index="11"
+        data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":0},{"t":1.2,"v":0.16},{"t":39.5,"v":0.16},{"t":40.85,"v":0}]}]}'
+      ></audio>
+
       <div id="caption-scrim"></div>
 
       <div id="caption-layer">
@@ -148,14 +157,6 @@
     <script>
       window.__timelines = window.__timelines || {};
       const tl = gsap.timeline({ paused: true });
-
-      // Gentle push-in (Ken Burns) on the talking-head shot across the whole clip.
-      tl.fromTo(
-        "#source-video",
-        { scale: 1.0 },
-        { scale: 1.06, duration: 40.85, ease: "none" },
-        0,
-      );
 
       // --- Caption groups (word/phrase-synced) ---
       // Hebrew transcript from Deepgram (nova-3, word-level timestamps), grouped
@@ -187,6 +188,42 @@
         { start: 38.66, end: 39.78, words: [{ text: "ובואו" }, { text: "נדבר" }, { text: "—" }, { text: "אני" }, { text: "באמת" }] },
         { start: 39.78, end: 40.74, words: [{ text: "יכול" }, { text: "לעזור" }, { text: "לכם." }] },
       ];
+
+      // Video motion: a slow continuous push-in (Ken Burns) with a quick punch-in
+      // "beat" layered on at each emphasized caption line, so the shot itself
+      // gets more energetic right where the words do. Built as ONE continuous
+      // authored path on #source-video's scale (never two competing tweens on
+      // the same property at once — hyperframes-core/determinism-rules.md).
+      var DURATION = 40.85;
+      var BASE_FROM = 1.0;
+      var BASE_TO = 1.07;
+      function baseScale(t) {
+        return BASE_FROM + (BASE_TO - BASE_FROM) * (t / DURATION);
+      }
+      var EMPH_TIMES = CAPTION_GROUPS.filter(function (g) {
+        return g.words.some(function (w) {
+          return w.emph;
+        });
+      }).map(function (g) {
+        return g.start;
+      });
+
+      tl.set("#source-video", { scale: baseScale(0) }, 0);
+      var cursor = 0;
+      EMPH_TIMES.forEach(function (te) {
+        if (te <= cursor + 0.5) return;
+        tl.to("#source-video", { scale: baseScale(te), duration: te - cursor, ease: "none" }, cursor);
+        var bumpScale = baseScale(te) + 0.03;
+        tl.to("#source-video", { scale: bumpScale, duration: 0.16, ease: "power2.out" }, te);
+        var settleEnd = te + 0.5;
+        tl.to(
+          "#source-video",
+          { scale: baseScale(settleEnd), duration: 0.34, ease: "power2.inOut" },
+          te + 0.16,
+        );
+        cursor = settleEnd;
+      });
+      tl.to("#source-video", { scale: baseScale(DURATION), duration: DURATION - cursor, ease: "none" }, cursor);
 
       // Per-word "waterfall" arrival: each word whips in from below, overlapping
       // the previous one (hyperframes-animation/rules/waterfall-entry.md) so the
