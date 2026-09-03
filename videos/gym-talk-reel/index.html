@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="he">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/vendor/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #000;
+      }
+      @font-face {
+        font-family: "Rubik Hebrew";
+        src: url("assets/fonts/rubik-hebrew-var.woff2") format("woff2");
+        font-weight: 400 900;
+        font-style: normal;
+        font-display: block;
+      }
+      body {
+        font-family: "Rubik Hebrew", sans-serif;
+        direction: rtl;
+      }
+
+      .clip {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      #source-video {
+        object-fit: cover;
+        transform-origin: center center;
+      }
+
+      /* Bottom contrast band so white captions stay legible over the gym background */
+      #caption-scrim {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 46%;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.62) 62%, rgba(0, 0, 0, 0.62) 100%);
+        pointer-events: none;
+      }
+
+      /* Caption layer */
+      #caption-layer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 300px;
+        display: flex;
+        justify-content: center;
+        padding: 0 56px;
+        pointer-events: none;
+      }
+      .caption-group {
+        position: absolute;
+        left: 56px;
+        right: 56px;
+        text-align: center;
+        opacity: 0;
+        visibility: hidden;
+      }
+      .caption-group .caption-text {
+        display: inline;
+        font-family: "Rubik Hebrew", sans-serif;
+        font-weight: 800;
+        font-size: 64px;
+        line-height: 1.28;
+        color: #ffffff;
+        text-shadow:
+          0 2px 0 rgba(0, 0, 0, 0.85),
+          0 4px 14px rgba(0, 0, 0, 0.55);
+        unicode-bidi: plaintext;
+      }
+      .caption-group .caption-text.emph {
+        color: #ffd23f;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="41.25"
+      data-width="1080"
+      data-height="1920"
+    >
+      <video
+        id="source-video"
+        class="clip"
+        src="assets/source.mp4"
+        data-start="0"
+        data-duration="41.25"
+        data-media-start="11.6"
+        data-track-index="0"
+        muted
+        playsinline
+      ></video>
+
+      <audio
+        id="source-audio"
+        src="assets/source.mp4"
+        data-start="0"
+        data-duration="41.25"
+        data-media-start="11.6"
+        data-track-index="10"
+      ></audio>
+
+      <div id="caption-scrim"></div>
+
+      <div id="caption-layer">
+        <!-- caption groups injected by script below -->
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Gentle push-in (Ken Burns) on the talking-head shot across the whole clip.
+      tl.fromTo(
+        "#source-video",
+        { scale: 1.0 },
+        { scale: 1.06, duration: 41.25, ease: "none" },
+        0,
+      );
+
+      // --- Caption groups (word/phrase-synced) ---
+      // Populated once the transcript is available; see CAPTION_GROUPS below.
+      var CAPTION_GROUPS = [];
+
+      var layer = document.getElementById("caption-layer");
+      CAPTION_GROUPS.forEach(function (group, gi) {
+        var el = document.createElement("div");
+        el.className = "caption-group";
+        el.id = "cg-" + gi;
+        var html = group.words
+          .map(function (w) {
+            return (
+              '<span class="caption-text' +
+              (w.emph ? " emph" : "") +
+              '">' +
+              w.text +
+              "</span>"
+            );
+          })
+          .join(" ");
+        el.innerHTML = html;
+        layer.appendChild(el);
+
+        tl.set(el, { visibility: "visible" }, group.start);
+        tl.fromTo(
+          el,
+          { autoAlpha: 0, y: 18 },
+          { autoAlpha: 1, y: 0, duration: 0.22, ease: "power3.out" },
+          group.start,
+        );
+        tl.to(
+          el,
+          { autoAlpha: 0, y: -10, duration: 0.14, ease: "power2.in" },
+          group.end - 0.14,
+        );
+        tl.set(el, { visibility: "hidden" }, group.end);
+      });
+
+      // Self-lint: every caption group must be fully hidden right after its end.
+      CAPTION_GROUPS.forEach(function (group, gi) {
+        var el = document.getElementById("cg-" + gi);
+        if (!el) return;
+        tl.seek(group.end + 0.01);
+        var computed = window.getComputedStyle(el);
+        if (computed.opacity !== "0" && computed.visibility !== "hidden") {
+          console.warn(
+            "[caption-lint] group " + gi + " still visible at t=" + (group.end + 0.01).toFixed(2) + "s",
+          );
+        }
+      });
+      tl.seek(0);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
